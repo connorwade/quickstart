@@ -13,7 +13,13 @@ func ConfigureSvelteProject() error {
 	if err != nil {
 		return err
 	}
-	err = EditPackageJson()
+	err = EditPackageJson(PackageEditConfig{
+		DevDependencies: []string{
+			"daisyui",
+			"autoprefixer",
+			"tailwindcss",
+			"postcss",
+		}})
 	if err != nil {
 		return err
 	}

@@ -23,6 +23,12 @@ type PackageData struct {
 	} `json:"dist-tags"`
 }
 
+type PackageEditConfig struct {
+	DevDependencies []string
+	Dependencies    []string
+	Scripts         [][2]string
+}
+
 func getLatestVersion(packageName string) (string, error) {
 	resp, err := http.Get("https://registry.npmjs.org/" + packageName)
 	if err != nil {
@@ -53,7 +59,7 @@ func readPackageJson() ([]byte, error) {
 	return file, nil
 }
 
-func EditPackageJson() error {
+func EditPackageJson(c PackageEditConfig) error {
 	file, err := readPackageJson()
 	if err != nil {
 		return err
@@ -62,19 +68,24 @@ func EditPackageJson() error {
 	var p PackageJSONSpec
 	json.Unmarshal(file, &p)
 
-	depsToAdd := []string{
-		"tailwindcss",
-		"daisyui",
-		"autoprefixer",
-		"postcss",
-	}
-
-	for _, dep := range depsToAdd {
+	for _, dep := range c.DevDependencies {
 		latestVersion, err := getLatestVersion(dep)
 		if err != nil {
 			return err
 		}
 		p.DevDependencies[dep] = "^" + latestVersion
+	}
+
+	for _, scriptArray := range c.Scripts {
+		p.Scripts[scriptArray[0]] = scriptArray[1]
+	}
+
+	for _, dep := range c.Dependencies {
+		latestVersion, err := getLatestVersion(dep)
+		if err != nil {
+			return err
+		}
+		p.Dependencies[dep] = "^" + latestVersion
 	}
 
 	if p.Dependencies == nil {
